@@ -16,6 +16,23 @@ You will need:
 * Validator startup scripts both modified to use a symbolic link as the identity
 * Validator startup scripts both modified to include staked identity as authorized voter
 
+## Changes for Alpenglow
+
+- With Alpenglow, transfer `vote_history-<IDENTITY>.bin` instead of a tower
+  file.
+- By default, `set-identity` requires the vote history file to be present.
+
+### If the Vote History File Is Unavailable
+
+If the primary validator is unreachable or its disk is corrupted:
+
+- Ensure that the primary validator is shut down, powering off the machine if
+  necessary.
+- Ensure that the secondary validator has fully caught up to the tip of the
+  chain and has finalized slots past the primary's last vote.
+- Run `set-identity` on the secondary validator with
+  `--do-not-require-vote-history`.
+
 ## Setup
 
 ### Generating an Unstaked Secondary Identity
@@ -74,7 +91,8 @@ If you have done this - great! You're ready to transition!
 * Wait for a restart window
 * Set identity to unstaked identity
 * Correct symbolic link to reflect this change
-* Copy the tower file to the inactive validator
+* Copy the tower file (Tower BFT) or vote history file (Alpenglow) to the
+  inactive validator
 
 ```
 #!/bin/bash
@@ -83,20 +101,30 @@ If you have done this - great! You're ready to transition!
 agave-validator -l /mnt/ledger wait-for-restart-window --min-idle-time 2 --skip-new-snapshot-check
 agave-validator -l /mnt/ledger set-identity /home/sol/unstaked-identity.json
 ln -sf /home/sol/unstaked-identity.json /home/sol/identity.json
+
+# Tower BFT
 scp /mnt/ledger/tower-1_9-$(solana-keygen pubkey /home/sol/staked-identity.json).bin <user>@<IP>/mnt/ledger
+
+# Alpenglow
+scp /mnt/ledger/vote_history-$(solana-keygen pubkey /home/sol/staked-identity.json).bin <user>@<IP>/mnt/ledger
 ```
 
 (At this point your primary identity is no longer voting)
 
 #### Inactive Validator
-* Set identity to your staked identity (requiring the tower)
+* Set identity to your staked identity, requiring the appropriate consensus
+  state file
 * Rewrite the symbolic link to reflect this
 
 ```
 #!/bin/bash
 
 # example script of the above steps
+# Tower BFT requires the tower file explicitly
 agave-validator -l /mnt/ledger set-identity --require-tower /home/sol/staked-identity.json
+
+# Alpenglow requires the vote history file by default
+agave-validator -l /mnt/ledger set-identity /home/sol/staked-identity.json
 ln -sf /home/sol/staked-identity.json /home/sol/identity.json
 ```
 
