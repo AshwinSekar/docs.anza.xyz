@@ -29,6 +29,67 @@ For details about changes introduced with Alpenglow, see:
 - [Commitment status](./commitments.md#alpenglow) for how the Confirmed and
   Finalized commitment statuses change.
 
+## Consensus Access for Unstaked Validators
+
+By default, Votor consensus messages are exchanged only among validators in the
+admitted set. The protocol selects this set each epoch and automatically deducts
+the validator admission ticket (VAT) from their vote accounts. Nodes outside the
+set can still obtain consensus information through the following tiers, with
+different latency levels.
+
+Alpenglow targets finality in roughly 150 ms under normal network conditions.
+Depending on the tier, an unstaked node may learn of finalization later.
+
+### Tier 3: Receive Consensus Information Through Blocks
+
+Each leader includes its latest known finalization certificate in the footer of
+the block it produces.
+
+No additional configuration is required: Agave automatically processes these
+certificates and updates local commitment status, even on nodes outside the
+admitted set.
+
+Nodes using this path learn of finalization when they receive a later block that
+carries the certificate. Compared with direct Votor delivery, this typically
+adds up to one produced-block interval and can take longer when blocks are
+skipped or delayed.
+
+### Tier 2: Partner with an Admitted Validator
+
+For lower latency, an unstaked node can receive Votor consensus messages from an
+admitted validator. The admitted validator must pass the unstaked node's
+gossip identity to the following `agave-validator` CLI option:
+
+```bash
+--votor-peer-overrides <UNSTAKED_PARTNER_IDENTITY>...
+```
+
+The admitted validator then sends Votor messages directly to each configured identity.
+The additional delay is primarily the network latency between the partner nodes.
+
+:::caution
+
+If none of an unstaked node's configured partners are reachable, the node stops
+receiving Votor messages directly but still learns finality from later block
+footers through Tier 3. Consider partnering with multiple admitted validators
+for extra resilience.
+
+:::
+
+### Tier 1: Become an Admitted Validator
+
+For the lowest latency, operators can register a valid vote account with BLS pubkey,
+delegate stake to the validator and keep enough SOL in its vote account to cover the VAT.
+At most 2,000 eligible validators are admitted, with priority given to higher stake, so
+delegate the minimum required to acquire a seat (e.g. 1 SOL).
+
+With such little SOL delegated, an admitted validator is extremely unlikely
+to be selected for block production. It also earns negligible inflation rewards
+making this an unprofitable setup.
+
+However this option may still be suitable for RPC operators that need to serve the
+freshest possible data but cannot geo-locate with a partner validator that is admitted.
+
 ## Block Footers and Geyser Plugins
 
 Alpenglow blocks end with a versioned footer containing various metadata.
