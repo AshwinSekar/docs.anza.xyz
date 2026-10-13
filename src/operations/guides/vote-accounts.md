@@ -101,44 +101,11 @@ account must hold the ticket amount in addition to its rent-exempt minimum. If
 its balance is too low, the validator is not admitted to vote or produce blocks
 in the following epoch.
 
-For example, a ticket deducted at the start of epoch 100 pays for admission in
-epoch 101.
+The first VAT is charged in the migration epoch—the epoch in which the Alpenglow
+feature flag activates. For example on mainnet beta, the VAT will be first charged
+at the start of epoch 1064 for admission in epoch 1065.
 
-#### Expected Charge
-
-[SIMD-0525](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0525-reduce-slot-times.md#validator-admission-ticket-scaling)
-scales the VAT with the effective target slot time, keeping its final cost at
-approximately 0.8 SOL per day. With
-[Mainnet Beta currently targeting 300 ms](https://github.com/anza-xyz/agave/wiki/Feature-Gate-Tracker-Schedule),
-the expected VAT after Alpenglow activates is 1.2 SOL per roughly 36-hour epoch.
-The full rollout schedule is:
-
-| Target slot time  | Approximate epoch duration | VAT per epoch |
-| ----------------- | -------------------------- | ------------- |
-| 400 ms (baseline) | 48 hours                   | 1.6 SOL       |
-| 350 ms (previous) | 42 hours                   | 1.4 SOL       |
-| 300 ms (current)  | 36 hours                   | 1.2 SOL       |
-| 250 ms (planned)  | 30 hours                   | 1.0 SOL       |
-| 200 ms (planned)  | 24 hours                   | 0.8 SOL       |
-
-These are fixed per-epoch charges for each slot-time stage. The charge uses the
-stage for the epoch being admitted, and actual epoch wall time can vary.
-
-Note: that slot time feature activations are delayed by 1 epoch.
-For transition epochs consult this table, imagining that the 250ms feature flag
-activates at the start of epoch E + 1:
-
-| Epoch Transition | Feature Activation   | Slot Time in new epoch | VAT Amount | Admission for Epoch |
-| ---------------- | -------------------- | ---------------------- | ---------- | ------------------- |
-| E - 1 -> E       | None                 | 300 ms                 | 1.2 SOL    | E + 1               |
-| E -> E + 1       | 250ms flag activates | 300 ms                 | 1.2 SOL    | E + 2               |
-| E + 1 -> E + 2   | 250ms effective      | 250 ms                 | 1.0 SOL    | E + 3               |
-| E + 2 -> E + 3   | None                 | 250 ms                 | 1.0 SOL    | E + 4               |
-
-Here the 250ms feature flag activated at the start of E + 1, but the admission
-ticket charges at the start of E + 1 was still 1.2 SOL for admission in E + 2.
-E + 2 was the first epoch with 250ms slot times, and the admission ticket charged
-at the beginning of E + 2 was decreased to 1.0 SOL.
+The VAT is 0.8 SOL per epoch.
 
 #### Fund the VAT with Commission Revenue
 
